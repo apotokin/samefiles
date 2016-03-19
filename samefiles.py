@@ -11,7 +11,7 @@ import hashlib
 
 
 DBNAME = 'db.sqlite3'
-PATH = 'c:/users/apotokin/Desktop'
+PATH = 'g:/'
 
 connection = sqlite3.connect(DBNAME)
 cursor = connection.cursor()
@@ -42,9 +42,15 @@ def make_db():
     connection.commit()
     
 def fill_db():    
-    numfiles = 0;
+    numfiles = 0
     for dirname, dirs, filenames in os.walk(PATH):
         for fn in filenames:
+            file_in_db = db_ex('''select "True" from samefiles s 
+                where s.dir = ? and s.name = ?''', 
+                (dirname, fn)).fetchone()
+            if file_in_db:
+                continue
+            
             try:
                 stat = os.lstat(os.path.join(dirname, fn))
             except FileNotFoundError:
@@ -62,7 +68,7 @@ def fill_db():
             print(dirname, fn, stat.st_size // 1024 // 1024)
             db_ex('''INSERT INTO samefiles (md5, dir, name, size, ctime) values (?, ?, ?, ?, ?)''', 
                          (md5, dirname, fn, stat.st_size, stat.st_ctime))
-            numfiles += 1;
+            numfiles += 1
             if numfiles % 10: 
                 connection.commit()
         print(numfiles)
@@ -70,7 +76,7 @@ def fill_db():
             
     
 if __name__ == '__main__':
-    make_db()
+    #make_db()
     fill_db()
     
     connection.close()
