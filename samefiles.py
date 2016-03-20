@@ -46,14 +46,14 @@ def fill_db():
     for dirname, dirs, filenames in os.walk(PATH):
         for fn in filenames:
             file_in_db = db_ex('''select "True" from samefiles s 
-                where s.dir = ? and s.name = ?''', 
-                (dirname, fn)).fetchone()
+                                  where s.dir = ? and s.name = ?''', 
+                                           (dirname, fn)).fetchone()
             if file_in_db:
                 continue
             
             try:
                 stat = os.lstat(os.path.join(dirname, fn))
-            except FileNotFoundError:
+            except: # FileNotFoundError, PermissionError:
                 continue
             
             hasher = hashlib.md5()
@@ -69,7 +69,7 @@ def fill_db():
             db_ex('''INSERT INTO samefiles (md5, dir, name, size, ctime) values (?, ?, ?, ?, ?)''', 
                          (md5, dirname, fn, stat.st_size, stat.st_ctime))
             numfiles += 1
-            if numfiles % 10: 
+            if numfiles % 100: 
                 connection.commit()
         print(numfiles)
             
